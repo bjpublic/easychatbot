@@ -1,0 +1,12 @@
+{
+  "name": "music-project",
+  "version": "1.0.0",
+  "description": "music-project",
+  "main": "app.js",
+  "author": "WillPark",
+  "dependencies": {    
+    "body-parser": "^1.18.2",    
+    "express": "^4.16.3",
+    "request": "^2.85.0"
+  }
+}

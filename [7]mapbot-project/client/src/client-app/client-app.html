@@ -1,0 +1,121 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/google-map/google-map.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-query.html">
+
+<dom-module id="client-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+
+        height: 100%;
+        margin: 0;
+      }
+
+      .botHelper {
+        @apply(--layout-horizontal);
+        margin-left: 10px;
+      }
+
+      .botHelper paper-input {
+        width: 400px;
+      }
+    </style>
+    <firebase-app
+      name="ghlist"
+      auth-domain="ghbot-762ee.firebaseio.com"
+      database-url="https://ghbot-762ee.firebaseio.com/"
+      api-key="[API_KEY]"
+      >
+    </firebase-app>
+
+    <firebase-query
+        id="query"        
+        app-name="ghlist"
+        path="/guesthouses"
+        data="{{results}}">
+    </firebase-query>
+
+    
+    <div class="botHelper">
+      <paper-input id="piMsg" label="Need help...?"></paper-input>
+      <paper-button on-tap="sendMessageForInput" raised>Send</paper-button>
+    </div>
+
+    <google-map api-key="[GOOGLE_MAP_API_KEY]" latitude="{{latitude}}" longitude="{{longitude}}" zoom="{{zoom}}">
+      <template is="dom-repeat" items="{{results}}" as="marker">
+       <google-map-marker latitude="{{marker.lat}}" longitude="{{marker.lng}}">
+         <h2>{{marker.name}} - {{marker.enname}}</h2>
+         <span>{{marker.en_address}}</span>
+       </google-map-marker>
+      </template>
+    </google-map>              
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class ClientApp extends Polymer.Element {
+      static get is() { return 'client-app'; }
+      static get properties() {
+        return {          
+          latitude: {
+            type: Number,
+            value: 37.539242
+          },
+
+          longitude: {
+            type: Number,
+            value: 126.9003506
+          },
+
+          zoom: {
+            type: Number,
+            value: 13
+          }
+        };
+      }
+
+
+      sendMessageForInput(e) {      
+        const msg = this.$.piMsg.value;
+        if(msg!=null && msg!=""){          
+          const formData = {query: msg};
+          const that = this;
+          $.ajax({
+            url: "/process",          
+            data: formData,
+            type: 'POST',            
+            success: function(result) {
+              console.log(result);
+
+              if(result.flag==1){                
+                const lat = result.data.lat;
+                const lng = result.data.lng;
+
+                that.latitude = lat;
+                that.longitude = lng;
+
+                that.zoom = 18;                
+              }              
+              
+            },
+            error: function(req, status, err){
+              console.error(err);
+            }
+
+          });
+        }     
+      }
+
+    }
+
+    window.customElements.define(ClientApp.is, ClientApp);
+  </script>
+</dom-module>

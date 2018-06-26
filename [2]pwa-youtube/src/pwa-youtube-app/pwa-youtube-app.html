@@ -1,0 +1,49 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/app-route/app-location.html">
+<link rel="import" href="../../bower_components/app-route/app-route.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="list-page.html">
+<link rel="import" href="video-page.html">
+
+
+<dom-module id="pwa-youtube-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>    
+
+    <iron-pages id="pages"
+        role="main"
+        selected="[[routeData.page]]"        
+        attr-for-selected="name"
+        fallback-selection="shows">
+      <list-page name="shows" subroute="[[subroute]]"></list-page>
+      <video-page name="video" subroute="[[subroute]]"></video-page>
+    </iron-pages>
+  </template>
+
+  <script>    
+    class PwaYoutubeApp extends Polymer.Element {
+      static get is() { return 'pwa-youtube-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'pwa-youtube-app'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(PwaYoutubeApp.is, PwaYoutubeApp);
+  </script>
+</dom-module>

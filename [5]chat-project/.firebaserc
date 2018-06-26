@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "testdemo-staging": "testdemo-d7b23",
+    "default": "testdemo-d7b23"
+  }
+}

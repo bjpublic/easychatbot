@@ -1,0 +1,51 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/google-youtube/google-youtube.html">
+
+<dom-module id="video-page">
+  <template>
+    <style>
+
+      :host {
+        display: block;
+      }
+
+    </style>
+
+    <div class="video-frame">
+      <google-youtube
+          width="100%"
+          height="600px"
+          video-id="[[videoId]]"
+          rel="0"
+          start="5"
+          autoplay="1"></google-youtube>
+    </div>
+
+  </template>
+
+  <script>
+
+    class VideoPage extends Polymer.Element {
+
+      static get is() { return 'video-page'; }
+
+      static get properties() {
+        return {
+          subroute: Object,
+
+          videoId: {
+            type: String,
+            computed: '_getVideoId(subroute)'
+          }
+        }        
+      }
+
+      _getVideoId(subroute) {
+        return subroute && subroute.path ? subroute.path.substr(1) : '';
+      }
+      
+    }
+
+    window.customElements.define(VideoPage.is, VideoPage);
+  </script>
+</dom-module>

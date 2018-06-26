@@ -1,0 +1,204 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-storage-multiupload.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-storage-upload-task.html">
+<link rel="import" href="chat-msg.html">
+
+<dom-module id="view-room">
+  <template>
+	<style>
+		:host {
+			width: 100%;			
+		}
+
+		.chatWrapper {		
+			@apply --layout-vertical;	
+			height: 100%;
+			min-height: 500px;
+			background-color: #f1f1f1;
+		}
+
+		.flex {
+			@apply --layout-flex;
+		}
+
+		.chatList {									
+			padding-bottom: 15px; 
+		}
+
+		.sendBox {
+			@apply(--layout-horizontal);
+		}		
+
+		iron-list {						
+			height: 500px;
+		}
+
+	</style>	
+
+	<firebase-query
+	    id="query"
+	    app-name="chatdemo"
+	    path="/messages"
+	    data="{{messages}}">
+	</firebase-query>
+
+	<firebase-storage-multiupload
+	    id="fs"
+	    app-name="chatdemo"
+	    path="{{storagePath}}"
+	    upload-tasks="{{uploadTasks}}"
+	    on-error="catchError"
+	    force-unique>
+	</firebase-storage-multiupload>
+
+	<template is="dom-repeat" items="[[uploadTasks]]">
+      <firebase-storage-upload-task
+        task="[[item]]""
+        bytes-transferred="{{item.bytesTransferred}}"
+        total-bytes="{{item.totalBytes}}"
+        state="{{uploadState}}"
+        download-url="{{downloadUrl}}"
+        metadata="{{item.metadata}}"
+        path="{{item.path}}"></firebase-storage-upload-task>        
+    </template>	
+
+	<div class="chatWrapper">
+		<div class="chatList flex">				
+			<iron-list id="ilist" items="[[messages]]" as="msg">
+				<template>						
+					<chat-msg class="chatmsg" ctype="[[msg.ctype]]" userphoto="[[msg.userphoto]]" username="[[msg.username]]" content="[[msg.content]]" pic="[[msg.pic]]" currenttime="[[msg.currenttime]]"></chat-msg>
+				</template>
+			</iron-list>				
+		</div>
+		<div class="sendBox">
+			<paper-input id="piMsg" class="flex" label="Message..." on-keyup="checkKey"></paper-input>
+			<paper-button on-tap="sendMessageForInput" raised>Send</paper-button>
+
+			<form id="image-form" action="#">
+				<input id="mediaCapture" type="file" accept="image/*,capture=camera" on-change="saveImageMessage" hidden>
+      			<paper-fab icon="icons:cloud-upload" id="btnImgUpload" on-tap="imgUpload"></paper-fab>
+      		</form>
+		</div>			
+	</div>
+  </template>
+
+  <script>
+	class ViewRoom extends Polymer.Element {
+	  static get is() { return 'view-room'; }
+      static get properties() {
+        return {
+		  messages: {
+		    type: Array
+		  },
+
+		  user: {
+		  	type: Object
+		  },		  
+
+		  storagePath: String,
+		  downloadUrl: String,
+
+		  uploadState: {
+		  	type: String,
+		  	observer: '_uploadStateChanges'
+		  }	    
+        };
+      }
+
+
+	  ready() {
+	  	super.ready();
+
+	  }
+	
+	  checkKey(e) {			
+	  	//enter key
+	   	if(e.keyCode==13) {
+		  this.sendMessageForInput();
+	    }
+	  }
+
+	  sendMessageForInput(e) {	  	
+		const msg = this.$.piMsg.value;			
+		if(msg!=null && msg!=""){
+			const username = this.user.displayName;
+			const userphoto = this.user.photoURL;
+			this.sendMessage(username, userphoto, msg);
+		}			
+	  }
+
+	  sendMessage(username, userphoto, content) {			
+		const msgData = {
+			username: username,
+			userphoto: userphoto,
+		    content: content,
+		    currenttime : new Date().toLocaleString(),
+		    ctype: 1
+		};
+				
+		this.$.query.ref.push(msgData)
+		.then(function() {	     
+	      this.$.piMsg.value = "";
+		  this.moveScrollBottom();
+	    }.bind(this))
+	    .catch(function(error) {
+	      console.error('Error writing new message to Firebase Database', error);
+	    });
+		
+	  }	  
+
+	  /* for img upload */
+	  imgUpload(event) {
+	  	event.preventDefault();
+    	this.$.mediaCapture.click();
+	  }
+
+	  catchError(e) {
+	  	console.error(e.detail.message);
+	  }
+
+	  saveImageMessage(event) {
+	  	event.preventDefault();
+  		const files = event.target.files;  		
+
+  		this.storagePath = this.user.uid;  		  		
+  		this.$.fs.upload(files);  				  
+	  }
+	  
+	  _uploadStateChanges(newVal, oldVal) {
+	  	if(newVal && newVal === 'success'){	  		
+	  		const msgData = {
+				username: this.user.displayName,
+				userphoto: this.user.photoURL,			    
+				pic: this.downloadUrl,
+			    currenttime : new Date().toLocaleString(),
+			    ctype: 2
+			};
+					
+			this.$.query.ref.push(msgData)
+			.then(function() {	     
+		      this.$.piMsg.value = "";
+			  this.moveScrollBottom();
+		    }.bind(this))
+		    .catch(function(error) {
+		      console.error('Error writing new message to Firebase Database', error);
+		    });
+	  	}
+	  }	  
+
+
+	  moveScrollBottom() {		  		
+		this.$.ilist.scrollTop = this.$.ilist.scrollHeight;
+	  }		
+	
+	}
+
+	window.customElements.define(ViewRoom.is, ViewRoom);
+  </script>
+</dom-module>

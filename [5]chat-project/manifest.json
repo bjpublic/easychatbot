@@ -1,0 +1,6 @@
+{
+  "name": "chat-project",
+  "short_name": "chat-project",
+  "start_url": "/",
+  "display": "standalone"
+}

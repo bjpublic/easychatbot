@@ -1,0 +1,6 @@
+{
+  "name": "client",
+  "short_name": "client",
+  "start_url": "/",
+  "display": "standalone"
+}

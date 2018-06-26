@@ -1,0 +1,80 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
+
+<dom-module id="chat-msg">
+  <template>	
+	<style>
+		:host {
+			display: block;
+			position: relative;
+			width: 100%;
+			border-bottom: 1px solid #d2d2d2;
+	        font-size: 14px;
+		}
+
+		.chatWrapper {
+			@apply --layout-horizontal;			
+			@apply --layout-center;
+
+			width: 100%;				
+			padding: 10px;
+			line-height: 25px;
+		}
+
+		.chatWrapper .flex {
+			@apply --layout-horizontal;
+			@apply --layout-flex;
+		}
+
+		.chatWrapper .username {			
+			margin: 10px;	
+		}
+
+		.chatWrapper .msg {
+			margin: 10px;
+		}		
+
+		.timestamp {
+			margin: 10px;
+		}
+	</style>
+	
+	<div class="chatWrapper">		
+		<div class="flex">
+			<img src="[[userphoto]]" width="40" height="40"></img>
+			<div class="username">[[username]] : </div>
+
+			<template is="dom-if" if="{{!_isPicType(ctype)}}">
+				<div class="msg">[[content]]</div>
+			</template>
+			<template is="dom-if" if="{{_isPicType(ctype)}}">
+				<iron-image src="[[pic]]" width="350" height="350" sizing="cover"></iron-image>				
+			</template>
+		</div>
+		<div class="timestamp">[[currenttime]]</div>
+	</div>
+  </template>
+
+  <script>
+	class ChatMsg extends Polymer.Element {
+	  static get is() { return 'chat-msg'; }
+      static get properties() {
+        return {
+          ctype: Number,
+          pic: String,
+          username: String,
+          userphoto: String,
+          content: String,
+          currenttime: String
+        };
+      }
+
+      _isPicType(ctype) {      	
+      	return ctype==2;
+      }
+
+	}
+
+	window.customElements.define(ChatMsg.is, ChatMsg);
+  </script>
+</dom-module>

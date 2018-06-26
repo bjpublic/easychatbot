@@ -1,0 +1,153 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<dom-module id="client-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .botHelper {
+        @apply(--layout-horizontal);
+        margin-left: 10px;
+      }
+
+      .botHelper paper-input {
+        width: 400px;
+      }
+    </style>
+
+    <div class="botHelper">
+      <paper-input id="piMsg" label="메시지 입력"></paper-input>
+      <paper-button on-tap="sendMessageForInput" raised>Send</paper-button>
+    </div>
+    
+    <!-- <button on-click="_start">Start</button>
+    <button on-click="_stop">Stop</button>
+
+    <button on-click="_changeType">change</button>
+    <button on-click="_freqDown">freq Down</button>
+    <button on-click="_freqUp">freq Up</button>
+    <button on-click="_volumeDown">volumn Down</button>
+    <button on-click="_volumeUp">volumn Up</button> -->
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class ClientApp extends Polymer.Element {
+      static get is() { return 'client-app'; }
+      static get properties() {
+        return {
+          context: {
+            type: Object,
+            value: new AudioContext()
+          },
+
+          osc: Object,
+
+          gainnode: Object
+        };
+      }      
+      
+
+      sendMessageForInput(e) {              
+        const msg = this.$.piMsg.value;
+        if(msg!=null && msg!=""){          
+          const formData = {query: msg};
+          const that = this;
+          $.ajax({
+            url: "/process",          
+            data: formData,
+            type: 'POST',            
+            success: function(result) {
+              console.log(result);
+
+              if(result.flag==1){                
+                
+                const data = result.data;
+                if(data.play.length > 0){
+                  that._start(0);
+                } else if(data.stop.length > 0){
+                  that._stop();
+                } else if(data.delay.length > 0){
+                  const sec = data.number;
+
+                  that._start(sec);
+                } else if(data.changetype.length > 0){
+                  const osctype = data.osctype;
+
+                  if(osctype){
+                    that._changeType(osctype);
+                  }                  
+                } else if(data.volume.length > 0){
+                  if(data.up.length>0){
+                    that._volumeUp();
+                  } else if(data.down.length>0){
+                    that._volumeDown();
+                  }
+                } else if(data.frequency.length > 0){
+                  if(data.up.length>0){
+                    that._freqUp();
+                  } else if(data.down.length>0){
+                    that._freqDown();
+                  }
+                }
+
+              }              
+              
+            },
+            error: function(req, status, err){
+              console.error(err);
+            }
+
+          });
+        }     
+      }
+
+      _start(sec) {                 
+        this.osc = this.context.createOscillator();
+
+        this.osc.type = 'sine';
+        this.osc.frequency.value = 440;        
+                
+        this.gainnode = this.context.createGain();        
+        this.osc.connect(this.gainnode);
+        this.gainnode.connect(this.context.destination);
+
+        this.osc.start(sec);
+      }
+
+      _stop() {
+        this.osc.stop();
+      }
+
+      _volumeDown() {
+        this.gainnode.gain.value = this.gainnode.gain.value-0.2;
+      }
+
+      _volumeUp() {
+        this.gainnode.gain.value = this.gainnode.gain.value+0.2;
+      }
+
+      //type : sine, square, triangle, sawtooth
+      _changeType(type) {        
+        this.osc.type = type;        
+      }
+
+      _freqUp(e) {
+        this.osc.frequency.value = this.osc.frequency.value+220;
+      }
+
+      _freqDown(e) {
+        this.osc.frequency.value = this.osc.frequency.value-220;
+      }
+    }
+
+    window.customElements.define(ClientApp.is, ClientApp);
+  </script>
+</dom-module>

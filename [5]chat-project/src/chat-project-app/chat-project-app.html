@@ -1,0 +1,65 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="view-room.html">
+
+<dom-module id="chat-project-app">
+  <template>
+    <style>
+      :host {
+        display: block;        
+      }
+    </style>
+    <h2>Hello [[prop1]]!</h2>
+
+    <firebase-app name="chatdemo" auth-domain="testdemo-d7b23.firebaseapp.com"
+        database-url="https://testdemo-d7b23.firebaseio.com"
+        storage-bucket="testdemo-d7b23.appspot.com"
+        api-key="[API 키]"></firebase-app>
+    <firebase-auth id="auth" app-name="chatdemo" user="{{user}}" provider="google" on-error="_showError"></firebase-auth>
+
+    <template is="dom-if" if="{{user}}">
+      <button id="btnSignOut" on-click="signOut">Sign Out</button>
+      <view-room user="[[user]]"></view-room>
+    </template>
+    <template is="dom-if" if="{{!user}}">
+      <button id="btnSignIn" on-click="signInWithGoogle">Sign In</button>      
+    </template>
+    <div class="error" hidden$="[[!error]]">[[error.code]]: [[error.message]]</div>
+  </template>
+
+  <script>    
+    class ChatProjectApp extends Polymer.Element {
+      static get is() { return 'chat-project-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'chat-project-app'
+          },
+
+          error: {
+            type: Object,
+            value: null
+          }
+        };
+      }
+
+      signInWithGoogle() {
+        this.error = null;
+        this.$.auth.signInWithPopup();
+      }
+
+      signOut() {
+        this.error = null;
+        this.$.auth.signOut();
+      }
+
+      _showError(e) {
+        this.error = e.detail;
+      }
+    }
+
+    window.customElements.define(ChatProjectApp.is, ChatProjectApp);
+  </script>
+</dom-module>
